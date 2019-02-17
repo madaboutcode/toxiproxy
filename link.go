@@ -2,10 +2,10 @@ package toxiproxy
 
 import (
 	"io"
-
 	"github.com/Shopify/toxiproxy/stream"
 	"github.com/Shopify/toxiproxy/toxics"
 	"github.com/sirupsen/logrus"
+	"net"
 )
 
 // ToxicLinks are single direction pipelines that connects an input and output via
@@ -68,6 +68,15 @@ func (link *ToxicLink) Start(name string, source io.Reader, dest io.WriteCloser)
 	for i, toxic := range link.toxics.chain[link.direction] {
 		if stateful, ok := toxic.Toxic.(toxics.StatefulToxic); ok {
 			link.stubs[i].State = stateful.NewState()
+		}
+		if _, ok := toxic.Toxic.(*toxics.ResetToxic); ok {
+			if err := source.(*net.TCPConn).SetLinger(0); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"name":  link.proxy.Name,
+					"toxic": toxic.Type,
+					"err":   err,
+				}).Error("Unable to  setLinger(ms)")
+			}
 		}
 
 		go link.stubs[i].Run(toxic)
