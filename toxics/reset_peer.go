@@ -19,13 +19,19 @@ type ResetToxic struct {
 
 func (t *ResetToxic) Pipe(stub *ToxicStub) {
 	timeout := time.Duration(t.Timeout) * time.Millisecond
+	timeover := time.After(timeout)
 
 	for {
 		select {
 		case <-stub.Interrupt:
 			return
-		case <-stub.Input:
-			<-time.After(timeout)
+		case c := <-stub.Input:
+			if c == nil {
+				stub.Close()
+				return
+			}
+			stub.Output <- c
+		case <-timeover:
 			stub.Close()
 			return
 		}

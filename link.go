@@ -71,21 +71,29 @@ func (link *ToxicLink) Start(name string, source io.Reader, dest io.WriteCloser)
 			link.stubs[i].State = stateful.NewState()
 		}
 		if _, ok := toxic.Toxic.(*toxics.ResetToxic); ok {
-			if err := source.(*net.TCPConn).SetLinger(0); err != nil {
+			if err := source.(*net.TCPConn).SetLinger(2000); err != nil {
 				logrus.WithFields(logrus.Fields{
 					"name":  link.proxy.Name,
 					"toxic": toxic.Type,
 					"err":   err,
 				}).Error("source: Unable to  setLinger(ms)")
-
+			} else {
+				logrus.WithFields(logrus.Fields{
+					"name":  link.proxy.Name,
+					"toxic": toxic.Type,
+				}).Info("source: setLinger(ms)")
 			}
-			if err := dest.(*net.TCPConn).SetLinger(0); err != nil {
+			if err := dest.(*net.TCPConn).SetLinger(2000); err != nil {
 				logrus.WithFields(logrus.Fields{
 					"name":  link.proxy.Name,
 					"toxic": toxic.Type,
 					"err":   err,
 				}).Error("dest: Unable to  setLinger(ms)")
-
+			} else {
+				logrus.WithFields(logrus.Fields{
+					"name":  link.proxy.Name,
+					"toxic": toxic.Type,
+				}).Info("dest: setLinger(ms)")
 			}
 		}
 
